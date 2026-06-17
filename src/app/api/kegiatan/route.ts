@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-auth";
+import { createKegiatan, listKegiatan } from "@/lib/content-store";
 
 export async function GET() {
   try {
-    const kegiatan = await prisma.kegiatan.findMany({
-      orderBy: { tanggal: "desc" },
-    });
+    const kegiatan = await listKegiatan();
     return NextResponse.json(kegiatan);
   } catch (err) {
     console.error("[GET /api/kegiatan]", err);
@@ -55,8 +53,13 @@ export async function POST(request: Request) {
     const status = body.status === "SELESAI" ? "SELESAI" : "AKAN_DATANG";
     const foto = body.foto?.trim() || null;
 
-    const kegiatan = await prisma.kegiatan.create({
-      data: { nama, deskripsi, tanggal, lokasi, foto, status },
+    const kegiatan = await createKegiatan({
+      nama,
+      deskripsi,
+      tanggal: tanggal.toISOString(),
+      lokasi,
+      foto,
+      status,
     });
     return NextResponse.json(kegiatan, { status: 201 });
   } catch (err) {

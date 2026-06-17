@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import { getKegiatan } from "@/lib/content-store";
 import { formatDate } from "@/lib/utils";
 import { site } from "@/lib/site";
 
@@ -15,10 +15,7 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { id } = await params;
-  const kegiatan = await prisma.kegiatan.findUnique({
-    where: { id },
-    select: { nama: true, deskripsi: true },
-  });
+  const kegiatan = await getKegiatan(id);
 
   if (!kegiatan) return { title: "Kegiatan tidak ditemukan" };
 
@@ -36,7 +33,7 @@ export default async function KegiatanDetailPage({
   params: Params;
 }) {
   const { id } = await params;
-  const kegiatan = await prisma.kegiatan.findUnique({ where: { id } });
+  const kegiatan = await getKegiatan(id);
   if (!kegiatan) notFound();
 
   const isUpcoming = kegiatan.status === "AKAN_DATANG";
@@ -73,7 +70,7 @@ export default async function KegiatanDetailPage({
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-pmr-red" aria-hidden />
               <span className="text-pmr-dark/80">
-                {formatDate(kegiatan.tanggal.toISOString())}
+                {formatDate(kegiatan.tanggal)}
               </span>
             </div>
             <div className="flex items-center gap-2">

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import { getArtikelBySlug } from "@/lib/content-store";
 import { formatDate } from "@/lib/utils";
 import { site } from "@/lib/site";
 
@@ -15,10 +15,7 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const artikel = await prisma.artikel.findUnique({
-    where: { slug },
-    select: { judul: true, konten: true, status: true },
-  });
+  const artikel = await getArtikelBySlug(slug);
 
   if (!artikel || artikel.status !== "PUBLISHED") {
     return { title: "Artikel tidak ditemukan" };
@@ -43,7 +40,7 @@ export default async function ArtikelDetailPage({
   params: Params;
 }) {
   const { slug } = await params;
-  const artikel = await prisma.artikel.findUnique({ where: { slug } });
+  const artikel = await getArtikelBySlug(slug);
 
   if (!artikel || artikel.status !== "PUBLISHED") {
     notFound();
@@ -67,10 +64,10 @@ export default async function ArtikelDetailPage({
             Kembali ke semua artikel
           </Link>
           <time
-            dateTime={artikel.tanggal.toISOString()}
+            dateTime={artikel.tanggal}
             className="mt-6 block text-xs font-semibold uppercase tracking-wide text-pmr-red"
           >
-            {formatDate(artikel.tanggal.toISOString())}
+            {formatDate(artikel.tanggal)}
           </time>
           <h1 className="mt-3 text-3xl font-bold leading-tight tracking-tight text-pmr-dark md:text-4xl">
             {artikel.judul}

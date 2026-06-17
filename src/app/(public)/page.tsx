@@ -3,7 +3,7 @@ import Link from "next/link";
 import HeroSection from "@/components/public/HeroSection";
 import ArtikelCard from "@/components/public/ArtikelCard";
 import KegiatanCard from "@/components/public/KegiatanCard";
-import { prisma } from "@/lib/prisma";
+import { listArtikel, listKegiatan } from "@/lib/content-store";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -15,35 +15,34 @@ function buildRingkasan(konten: string): string {
 
 export default async function HomePage() {
   const [artikelDB, kegiatanDB] = await Promise.all([
-    prisma.artikel.findMany({
-      where: { status: "PUBLISHED" },
-      orderBy: { tanggal: "desc" },
-      take: 3,
-    }),
-    prisma.kegiatan.findMany({
-      where: { status: "AKAN_DATANG" },
-      orderBy: { tanggal: "asc" },
-      take: 3,
-    }),
+    listArtikel(),
+    listKegiatan(),
   ]);
 
-  const artikelTerbaru = artikelDB.map((a) => ({
-    id: a.id,
-    judul: a.judul,
-    slug: a.slug,
-    thumbnail: a.thumbnail ?? undefined,
-    tanggal: a.tanggal.toISOString(),
-    ringkasan: buildRingkasan(a.konten),
-  }));
+  const artikelTerbaru = artikelDB
+    .filter((a) => a.status === "PUBLISHED")
+    .slice(0, 3)
+    .map((a) => ({
+      id: a.id,
+      judul: a.judul,
+      slug: a.slug,
+      thumbnail: a.thumbnail ?? undefined,
+      tanggal: a.tanggal,
+      ringkasan: buildRingkasan(a.konten),
+    }));
 
-  const kegiatanTerdekat = kegiatanDB.map((k) => ({
-    id: k.id,
-    nama: k.nama,
-    deskripsi: k.deskripsi,
-    tanggal: k.tanggal.toISOString(),
-    lokasi: k.lokasi,
-    status: k.status,
-  }));
+  const kegiatanTerdekat = kegiatanDB
+    .filter((k) => k.status === "AKAN_DATANG")
+    .sort((a, b) => Date.parse(a.tanggal) - Date.parse(b.tanggal))
+    .slice(0, 3)
+    .map((k) => ({
+      id: k.id,
+      nama: k.nama,
+      deskripsi: k.deskripsi,
+      tanggal: k.tanggal,
+      lokasi: k.lokasi,
+      status: k.status,
+    }));
 
   return (
     <>

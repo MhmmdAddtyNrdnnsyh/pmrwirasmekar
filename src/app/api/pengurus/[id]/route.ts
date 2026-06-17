@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-auth";
 import { deleteFromBucketByUrl } from "@/lib/storage";
+import {
+  deletePengurus,
+  getPengurus,
+  updatePengurus,
+} from "@/lib/content-store";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const pengurus = await prisma.pengurus.findUnique({ where: { id } });
+    const pengurus = await getPengurus(id);
     if (!pengurus) {
       return NextResponse.json(
         { error: "Pengurus tidak ditemukan." },
@@ -54,15 +58,20 @@ export async function PUT(request: Request, { params }: Ctx) {
     const urutan = Number.isFinite(body.urutan) ? Number(body.urutan) : 0;
     const foto = body.foto?.trim() || null;
 
-    const current = await prisma.pengurus.findUnique({
-      where: { id },
-      select: { foto: true },
+    const current = await getPengurus(id);
+    const pengurus = await updatePengurus(id, {
+      nama,
+      jabatan,
+      kelas,
+      foto,
+      urutan,
     });
-
-    const pengurus = await prisma.pengurus.update({
-      where: { id },
-      data: { nama, jabatan, kelas, foto, urutan },
-    });
+    if (!pengurus) {
+      return NextResponse.json(
+        { error: "Pengurus tidak ditemukan." },
+        { status: 404 },
+      );
+    }
 
     if (current?.foto && current.foto !== pengurus.foto) {
       await deleteFromBucketByUrl(current.foto);
@@ -84,10 +93,13 @@ export async function DELETE(_request: Request, { params }: Ctx) {
 
   try {
     const { id } = await params;
-    const deleted = await prisma.pengurus.delete({
-      where: { id },
-      select: { foto: true },
-    });
+    const deleted = await deletePengurus(id);
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "Pengurus tidak ditemukan." },
+        { status: 404 },
+      );
+    }
     await deleteFromBucketByUrl(deleted.foto);
     return NextResponse.json({ ok: true });
   } catch (err) {

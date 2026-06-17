@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import { getKegiatan } from "@/lib/content-store";
 import FormKegiatan from "@/components/admin/FormKegiatan";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default async function AdminKegiatanEditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const kegiatan = await prisma.kegiatan.findUnique({ where: { id } });
+  const kegiatan = await getKegiatan(id);
   if (!kegiatan) notFound();
 
   return (
@@ -33,7 +33,7 @@ export default async function AdminKegiatanEditPage({
           Edit kegiatan
         </h1>
         <p className="mt-1 text-sm text-pmr-dark/60">
-          Perubahan akan langsung tersimpan ke database.
+          Perubahan akan langsung tersimpan ke Google Sheets.
         </p>
       </header>
 
@@ -42,7 +42,7 @@ export default async function AdminKegiatanEditPage({
         initial={{
           nama: kegiatan.nama,
           deskripsi: kegiatan.deskripsi,
-          tanggal: kegiatan.tanggal.toISOString(),
+          tanggal: kegiatan.tanggal,
           lokasi: kegiatan.lokasi,
           foto: kegiatan.foto,
           status: kegiatan.status,

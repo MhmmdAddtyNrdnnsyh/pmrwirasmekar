@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+pmrwirasmekar-*.json
 
 # debug
 npm-debug.log*

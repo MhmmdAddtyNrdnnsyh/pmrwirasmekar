@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-auth";
 import { deleteFromBucketByUrl } from "@/lib/storage";
+import {
+  deleteKegiatan,
+  getKegiatan,
+  updateKegiatan,
+} from "@/lib/content-store";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const kegiatan = await prisma.kegiatan.findUnique({ where: { id } });
+    const kegiatan = await getKegiatan(id);
     if (!kegiatan) {
       return NextResponse.json(
         { error: "Kegiatan tidak ditemukan." },
@@ -64,15 +68,21 @@ export async function PUT(request: Request, { params }: Ctx) {
     const status = body.status === "SELESAI" ? "SELESAI" : "AKAN_DATANG";
     const foto = body.foto?.trim() || null;
 
-    const current = await prisma.kegiatan.findUnique({
-      where: { id },
-      select: { foto: true },
+    const current = await getKegiatan(id);
+    const kegiatan = await updateKegiatan(id, {
+      nama,
+      deskripsi,
+      tanggal: tanggal.toISOString(),
+      lokasi,
+      foto,
+      status,
     });
-
-    const kegiatan = await prisma.kegiatan.update({
-      where: { id },
-      data: { nama, deskripsi, tanggal, lokasi, foto, status },
-    });
+    if (!kegiatan) {
+      return NextResponse.json(
+        { error: "Kegiatan tidak ditemukan." },
+        { status: 404 },
+      );
+    }
 
     if (current?.foto && current.foto !== kegiatan.foto) {
       await deleteFromBucketByUrl(current.foto);
@@ -94,10 +104,13 @@ export async function DELETE(_request: Request, { params }: Ctx) {
 
   try {
     const { id } = await params;
-    const deleted = await prisma.kegiatan.delete({
-      where: { id },
-      select: { foto: true },
-    });
+    const deleted = await deleteKegiatan(id);
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "Kegiatan tidak ditemukan." },
+        { status: 404 },
+      );
+    }
     await deleteFromBucketByUrl(deleted.foto);
     return NextResponse.json({ ok: true });
   } catch (err) {

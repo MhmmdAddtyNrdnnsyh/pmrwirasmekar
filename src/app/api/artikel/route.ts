@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-auth";
+import {
+  createArtikel,
+  getArtikelBySlug,
+  listArtikel,
+} from "@/lib/content-store";
 import { slugify } from "@/lib/utils";
 
 export async function GET() {
   try {
-    const artikel = await prisma.artikel.findMany({
-      orderBy: { tanggal: "desc" },
-    });
+    const artikel = await listArtikel();
     return NextResponse.json(artikel);
   } catch (err) {
     console.error("[GET /api/artikel]", err);
@@ -45,9 +47,15 @@ export async function POST(request: Request) {
     const slug = (body.slug?.trim() || slugify(judul)) || "artikel";
     const status = body.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
     const tanggal = body.tanggal ? new Date(body.tanggal) : new Date();
+    if (Number.isNaN(tanggal.getTime())) {
+      return NextResponse.json(
+        { error: "Format tanggal tidak valid." },
+        { status: 400 },
+      );
+    }
     const thumbnail = body.thumbnail?.trim() || null;
 
-    const existing = await prisma.artikel.findUnique({ where: { slug } });
+    const existing = await getArtikelBySlug(slug);
     if (existing) {
       return NextResponse.json(
         { error: `Slug "${slug}" sudah dipakai artikel lain.` },
@@ -55,8 +63,13 @@ export async function POST(request: Request) {
       );
     }
 
-    const artikel = await prisma.artikel.create({
-      data: { judul, slug, konten, thumbnail, tanggal, status },
+    const artikel = await createArtikel({
+      judul,
+      slug,
+      konten,
+      thumbnail,
+      tanggal: tanggal.toISOString(),
+      status,
     });
     return NextResponse.json(artikel, { status: 201 });
   } catch (err) {

@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-auth";
 import { slugify } from "@/lib/utils";
 import { deleteFromBucketByUrl } from "@/lib/storage";
+import {
+  deleteArtikel,
+  getArtikel,
+  getArtikelBySlug,
+  updateArtikel,
+} from "@/lib/content-store";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Ctx) {
   try {
     const { id } = await params;
-    const artikel = await prisma.artikel.findUnique({ where: { id } });
+    const artikel = await getArtikel(id);
     if (!artikel) {
       return NextResponse.json(
         { error: "Artikel tidak ditemukan." },
@@ -53,10 +58,16 @@ export async function PUT(request: Request, { params }: Ctx) {
 
     const slug = (body.slug?.trim() || slugify(judul)) || "artikel";
     const status = body.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
-    const tanggal = body.tanggal ? new Date(body.tanggal) : undefined;
+    const tanggal = body.tanggal ? new Date(body.tanggal) : new Date();
+    if (Number.isNaN(tanggal.getTime())) {
+      return NextResponse.json(
+        { error: "Format tanggal tidak valid." },
+        { status: 400 },
+      );
+    }
     const thumbnail = body.thumbnail?.trim() || null;
 
-    const existing = await prisma.artikel.findUnique({ where: { slug } });
+    const existing = await getArtikelBySlug(slug);
     if (existing && existing.id !== id) {
       return NextResponse.json(
         { error: `Slug "${slug}" sudah dipakai artikel lain.` },
@@ -64,22 +75,21 @@ export async function PUT(request: Request, { params }: Ctx) {
       );
     }
 
-    const current = await prisma.artikel.findUnique({
-      where: { id },
-      select: { thumbnail: true },
+    const current = await getArtikel(id);
+    const artikel = await updateArtikel(id, {
+      judul,
+      slug,
+      konten,
+      thumbnail,
+      tanggal: tanggal.toISOString(),
+      status,
     });
-
-    const artikel = await prisma.artikel.update({
-      where: { id },
-      data: {
-        judul,
-        slug,
-        konten,
-        thumbnail,
-        status,
-        ...(tanggal ? { tanggal } : {}),
-      },
-    });
+    if (!artikel) {
+      return NextResponse.json(
+        { error: "Artikel tidak ditemukan." },
+        { status: 404 },
+      );
+    }
 
     // Hapus thumbnail lama dari storage kalau memang berubah ke URL berbeda
     if (current?.thumbnail && current.thumbnail !== artikel.thumbnail) {
@@ -102,10 +112,13 @@ export async function DELETE(_request: Request, { params }: Ctx) {
 
   try {
     const { id } = await params;
-    const deleted = await prisma.artikel.delete({
-      where: { id },
-      select: { thumbnail: true },
-    });
+    const deleted = await deleteArtikel(id);
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "Artikel tidak ditemukan." },
+        { status: 404 },
+      );
+    }
     await deleteFromBucketByUrl(deleted.thumbnail);
     return NextResponse.json({ ok: true });
   } catch (err) {

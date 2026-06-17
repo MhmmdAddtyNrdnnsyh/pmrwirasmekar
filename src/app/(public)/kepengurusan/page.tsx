@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { UserRound } from "lucide-react";
 
 import PengurusCard from "@/components/public/PengurusCard";
-import { prisma } from "@/lib/prisma";
+import { listPengurus } from "@/lib/content-store";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -13,9 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function KepengurusanPage() {
-  const pengurusDB = await prisma.pengurus.findMany({
-    orderBy: [{ urutan: "asc" }, { nama: "asc" }],
-  });
+  const pengurusDB = await listPengurus();
 
   const sorted = pengurusDB.map((p) => ({
     id: p.id,

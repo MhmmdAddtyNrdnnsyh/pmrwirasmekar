@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Pencil } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import { listKegiatan } from "@/lib/content-store";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import DeleteButton from "@/components/admin/DeleteButton";
@@ -14,9 +14,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminKegiatanPage() {
-  const kegiatan = await prisma.kegiatan.findMany({
-    orderBy: [{ tanggal: "desc" }, { createdAt: "desc" }],
-  });
+  const kegiatan = await listKegiatan();
 
   return (
     <div className="space-y-6">
@@ -73,7 +71,7 @@ export default async function AdminKegiatanPage() {
                     </div>
                   </td>
                   <td className="px-5 py-4 text-pmr-dark/70">
-                    {formatDate(k.tanggal.toISOString())}
+                    {formatDate(k.tanggal)}
                   </td>
                   <td className="px-5 py-4 text-pmr-dark/70">{k.lokasi}</td>
                   <td className="px-5 py-4">

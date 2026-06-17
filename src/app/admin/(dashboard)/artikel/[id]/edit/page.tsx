@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import { getArtikel } from "@/lib/content-store";
 import FormArtikel from "@/components/admin/FormArtikel";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default async function AdminArtikelEditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const artikel = await prisma.artikel.findUnique({ where: { id } });
+  const artikel = await getArtikel(id);
   if (!artikel) notFound();
 
   return (
@@ -33,7 +33,7 @@ export default async function AdminArtikelEditPage({
           Edit artikel
         </h1>
         <p className="mt-1 text-sm text-pmr-dark/60">
-          Perubahan akan langsung tersimpan ke database.
+          Perubahan akan langsung tersimpan ke Google Sheets.
         </p>
       </header>
 
@@ -44,7 +44,7 @@ export default async function AdminArtikelEditPage({
           slug: artikel.slug,
           konten: artikel.konten,
           thumbnail: artikel.thumbnail,
-          tanggal: artikel.tanggal.toISOString(),
+          tanggal: artikel.tanggal,
           status: artikel.status,
         }}
       />

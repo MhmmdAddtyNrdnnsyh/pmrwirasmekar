@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-auth";
+import { createPengurus, listPengurus } from "@/lib/content-store";
 
 export async function GET() {
   try {
-    const pengurus = await prisma.pengurus.findMany({
-      orderBy: [{ urutan: "asc" }, { nama: "asc" }],
-    });
+    const pengurus = await listPengurus();
     return NextResponse.json(pengurus);
   } catch (err) {
     console.error("[GET /api/pengurus]", err);
@@ -45,8 +43,12 @@ export async function POST(request: Request) {
     const urutan = Number.isFinite(body.urutan) ? Number(body.urutan) : 0;
     const foto = body.foto?.trim() || null;
 
-    const pengurus = await prisma.pengurus.create({
-      data: { nama, jabatan, kelas, foto, urutan },
+    const pengurus = await createPengurus({
+      nama,
+      jabatan,
+      kelas,
+      foto,
+      urutan,
     });
     return NextResponse.json(pengurus, { status: 201 });
   } catch (err) {

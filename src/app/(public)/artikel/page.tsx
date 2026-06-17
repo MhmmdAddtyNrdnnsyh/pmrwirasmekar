@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import ArtikelCard from "@/components/public/ArtikelCard";
-import { prisma } from "@/lib/prisma";
+import { listArtikel } from "@/lib/content-store";
 import { site } from "@/lib/site";
 import { formatDate } from "@/lib/utils";
 
@@ -21,19 +21,18 @@ function buildRingkasan(konten: string): string {
 }
 
 export default async function ArtikelListPage() {
-  const artikelDB = await prisma.artikel.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: { tanggal: "desc" },
-  });
+  const artikelDB = await listArtikel();
 
-  const artikelList = artikelDB.map((a) => ({
-    id: a.id,
-    judul: a.judul,
-    slug: a.slug,
-    thumbnail: a.thumbnail ?? undefined,
-    tanggal: a.tanggal.toISOString(),
-    ringkasan: buildRingkasan(a.konten),
-  }));
+  const artikelList = artikelDB
+    .filter((a) => a.status === "PUBLISHED")
+    .map((a) => ({
+      id: a.id,
+      judul: a.judul,
+      slug: a.slug,
+      thumbnail: a.thumbnail ?? undefined,
+      tanggal: a.tanggal,
+      ringkasan: buildRingkasan(a.konten),
+    }));
 
   const [sorotan, ...lainnya] = artikelList;
 

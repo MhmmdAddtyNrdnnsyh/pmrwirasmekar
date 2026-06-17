@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import KegiatanCard from "@/components/public/KegiatanCard";
-import { prisma } from "@/lib/prisma";
+import { listKegiatan } from "@/lib/content-store";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -12,28 +12,24 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function KegiatanListPage() {
-  const [akanDatangDB, selesaiDB] = await Promise.all([
-    prisma.kegiatan.findMany({
-      where: { status: "AKAN_DATANG" },
-      orderBy: { tanggal: "asc" },
-    }),
-    prisma.kegiatan.findMany({
-      where: { status: "SELESAI" },
-      orderBy: { tanggal: "desc" },
-    }),
-  ]);
+  const kegiatanDB = await listKegiatan();
 
-  const toCard = (k: (typeof akanDatangDB)[number]) => ({
+  const toCard = (k: (typeof kegiatanDB)[number]) => ({
     id: k.id,
     nama: k.nama,
     deskripsi: k.deskripsi,
-    tanggal: k.tanggal.toISOString(),
+    tanggal: k.tanggal,
     lokasi: k.lokasi,
     status: k.status,
   });
 
-  const akanDatang = akanDatangDB.map(toCard);
-  const selesai = selesaiDB.map(toCard);
+  const akanDatang = kegiatanDB
+    .filter((k) => k.status === "AKAN_DATANG")
+    .sort((a, b) => Date.parse(a.tanggal) - Date.parse(b.tanggal))
+    .map(toCard);
+  const selesai = kegiatanDB
+    .filter((k) => k.status === "SELESAI")
+    .map(toCard);
   const total = akanDatang.length + selesai.length;
 
   return (

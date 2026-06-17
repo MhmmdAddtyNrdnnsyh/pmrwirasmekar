@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Pencil } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import { listArtikel } from "@/lib/content-store";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import DeleteButton from "@/components/admin/DeleteButton";
@@ -14,9 +14,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminArtikelPage() {
-  const artikel = await prisma.artikel.findMany({
-    orderBy: [{ tanggal: "desc" }, { createdAt: "desc" }],
-  });
+  const artikel = await listArtikel();
 
   return (
     <div className="space-y-6">
@@ -72,7 +70,7 @@ export default async function AdminArtikelPage() {
                     </div>
                   </td>
                   <td className="px-5 py-4 text-pmr-dark/70">
-                    {formatDate(a.tanggal.toISOString())}
+                    {formatDate(a.tanggal)}
                   </td>
                   <td className="px-5 py-4">
                     <StatusBadge status={a.status} />
