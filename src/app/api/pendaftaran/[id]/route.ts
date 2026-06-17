@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-auth";
+import {
+  deletePendaftaran,
+  getPendaftaran,
+  isPendaftaranStatus,
+  updatePendaftaranStatus,
+} from "@/lib/pendaftaran-store";
 
 type Ctx = { params: Promise<{ id: string }> };
 
-const VALID_STATUS = ["PENDING", "DITERIMA", "DITOLAK"] as const;
-type PendaftaranStatus = (typeof VALID_STATUS)[number];
-
-function isValidStatus(value: unknown): value is PendaftaranStatus {
-  return (
-    typeof value === "string" &&
-    (VALID_STATUS as readonly string[]).includes(value)
-  );
-}
+export const runtime = "nodejs";
 
 export async function GET(_request: Request, { params }: Ctx) {
   const unauth = await requireAdmin();
@@ -21,7 +18,7 @@ export async function GET(_request: Request, { params }: Ctx) {
 
   try {
     const { id } = await params;
-    const p = await prisma.pendaftaran.findUnique({ where: { id } });
+    const p = await getPendaftaran(id);
     if (!p) {
       return NextResponse.json(
         { error: "Pendaftaran tidak ditemukan." },
@@ -49,17 +46,21 @@ export async function PATCH(request: Request, { params }: Ctx) {
       status?: unknown;
     } | null;
 
-    if (!body || !isValidStatus(body.status)) {
+    if (!body || !isPendaftaranStatus(body.status)) {
       return NextResponse.json(
         { error: "Status harus PENDING, DITERIMA, atau DITOLAK." },
         { status: 400 },
       );
     }
 
-    const p = await prisma.pendaftaran.update({
-      where: { id },
-      data: { status: body.status },
-    });
+    const p = await updatePendaftaranStatus(id, body.status);
+    if (!p) {
+      return NextResponse.json(
+        { error: "Pendaftaran tidak ditemukan." },
+        { status: 404 },
+      );
+    }
+
     return NextResponse.json(p);
   } catch (err) {
     console.error("[PATCH /api/pendaftaran/:id]", err);
@@ -76,7 +77,14 @@ export async function DELETE(_request: Request, { params }: Ctx) {
 
   try {
     const { id } = await params;
-    await prisma.pendaftaran.delete({ where: { id } });
+    const deleted = await deletePendaftaran(id);
+    if (!deleted) {
+      return NextResponse.json(
+        { error: "Pendaftaran tidak ditemukan." },
+        { status: 404 },
+      );
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[DELETE /api/pendaftaran/:id]", err);

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/api-auth";
+import { createPendaftaran, listPendaftaran } from "@/lib/pendaftaran-store";
+
+export const runtime = "nodejs";
 
 // GET: admin-only (untuk halaman /admin/pendaftaran)
 export async function GET() {
@@ -9,9 +11,7 @@ export async function GET() {
   if (unauth) return unauth;
 
   try {
-    const pendaftaran = await prisma.pendaftaran.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    const pendaftaran = await listPendaftaran();
     return NextResponse.json(pendaftaran);
   } catch (err) {
     console.error("[GET /api/pendaftaran]", err);
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Sanitasi ringan no HP — angka, +, dan spasi saja
+    // Sanitasi ringan no HP — angka, +, spasi, dan strip saja
     const noHpSafe = noHp.replace(/[^\d+\s-]/g, "");
     if (noHpSafe.length < 8 || noHpSafe.length > 20) {
       return NextResponse.json(
@@ -77,15 +77,12 @@ export async function POST(request: Request) {
       );
     }
 
-    await prisma.pendaftaran.create({
-      data: {
-        nama,
-        nis,
-        kelas,
-        noHp: noHpSafe,
-        alasan,
-        // status default PENDING dari schema
-      },
+    await createPendaftaran({
+      nama,
+      nis,
+      kelas,
+      noHp: noHpSafe,
+      alasan,
     });
 
     // Jangan return data lengkap ke public.

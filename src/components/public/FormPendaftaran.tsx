@@ -56,7 +56,12 @@ export default function FormPendaftaran() {
       });
 
       if (!res.ok) {
-        throw new Error(`Gagal mengirim (HTTP ${res.status}).`);
+        const data: unknown = await res.json().catch(() => null);
+        const message =
+          data && typeof data === "object" && "error" in data
+            ? String((data as { error: unknown }).error)
+            : `Gagal mengirim (HTTP ${res.status}).`;
+        throw new Error(message);
       }
 
       form.reset();

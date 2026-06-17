@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
+import { listPendaftaran } from "@/lib/pendaftaran-store";
 import DeleteButton from "@/components/admin/DeleteButton";
 import PendaftaranStatusMenu from "@/components/admin/PendaftaranStatusMenu";
 
@@ -12,12 +12,12 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminPendaftaranPage() {
-  const [pendaftaran, pendingCount, diterimaCount, ditolakCount] = await Promise.all([
-    prisma.pendaftaran.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.pendaftaran.count({ where: { status: "PENDING" } }),
-    prisma.pendaftaran.count({ where: { status: "DITERIMA" } }),
-    prisma.pendaftaran.count({ where: { status: "DITOLAK" } }),
-  ]);
+  const pendaftaran = await listPendaftaran();
+  const pendingCount = pendaftaran.filter((p) => p.status === "PENDING").length;
+  const diterimaCount = pendaftaran.filter(
+    (p) => p.status === "DITERIMA",
+  ).length;
+  const ditolakCount = pendaftaran.filter((p) => p.status === "DITOLAK").length;
 
   return (
     <div className="space-y-6">
@@ -75,7 +75,7 @@ export default async function AdminPendaftaranPage() {
                     </p>
                   </td>
                   <td className="px-5 py-4 text-pmr-dark/70">
-                    {formatDate(p.createdAt.toISOString())}
+                    {formatDate(p.createdAt)}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-col items-end gap-3">

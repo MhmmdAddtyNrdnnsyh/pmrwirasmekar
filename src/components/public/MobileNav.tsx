@@ -2,28 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 
 import { navLinks, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
+const subscribeToHydration = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export default function MobileNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    subscribeToHydration,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-
-  // Tandai sudah mount di client supaya createPortal aman (tidak dipanggil saat SSR).
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Tutup otomatis saat route berganti
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   // Lock body scroll + focus tombol close + tangani Escape saat drawer terbuka
   useEffect(() => {
@@ -113,6 +111,7 @@ export default function MobileNav() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    onClick={() => setOpen(false)}
                     className={cn(
                       "block rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
@@ -131,6 +130,7 @@ export default function MobileNav() {
         <div className="border-t border-pmr-gray p-4">
           <Link
             href="/daftar"
+            onClick={() => setOpen(false)}
             className="inline-flex w-full items-center justify-center rounded-full bg-pmr-red px-4 py-2.5 text-sm font-semibold text-pmr-white transition-colors hover:bg-pmr-red-dark"
           >
             Daftar Anggota

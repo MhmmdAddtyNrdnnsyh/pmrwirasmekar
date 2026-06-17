@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
+import { listPendaftaran } from "@/lib/pendaftaran-store";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -35,22 +36,20 @@ export default async function AdminDashboardPage() {
     totalKegiatan,
     kegiatanUpcoming,
     totalPengurus,
-    pendaftaranPending,
-    totalPendaftaran,
-    pendaftaranTerbaru,
+    pendaftaran,
   ] = await Promise.all([
     prisma.artikel.count(),
     prisma.artikel.count({ where: { status: "PUBLISHED" } }),
     prisma.kegiatan.count(),
     prisma.kegiatan.count({ where: { status: "AKAN_DATANG" } }),
     prisma.pengurus.count(),
-    prisma.pendaftaran.count({ where: { status: "PENDING" } }),
-    prisma.pendaftaran.count(),
-    prisma.pendaftaran.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
+    listPendaftaran(),
   ]);
+  const pendaftaranPending = pendaftaran.filter(
+    (p) => p.status === "PENDING",
+  ).length;
+  const totalPendaftaran = pendaftaran.length;
+  const pendaftaranTerbaru = pendaftaran.slice(0, 5);
 
   const stats: Stat[] = [
     {
@@ -176,7 +175,7 @@ export default async function AdminDashboardPage() {
                     {p.nama}
                   </p>
                   <p className="text-xs text-pmr-dark/60">
-                    {p.kelas} &middot; {formatDate(p.createdAt.toISOString())}
+                    {p.kelas} &middot; {formatDate(p.createdAt)}
                   </p>
                 </div>
                 <StatusBadge status={p.status} />
