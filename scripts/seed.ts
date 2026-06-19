@@ -1,15 +1,17 @@
 /**
- * Seeder akun admin — jalankan SEKALI setelah DB siap:
+ * Seeder akun admin — jalankan SEKALI untuk membuat admin pertama:
  *   npm run db:seed
  *
  * Variabel env yang dipakai (opsional, ada default):
  *   SEED_ADMIN_USERNAME  (default: "admin")
  *   SEED_ADMIN_PASSWORD  (wajib diset — seeder tidak akan lanjut tanpa ini)
+ *
+ * Data admin disimpan di Google Sheets (tab Admin).
  */
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 
-import { prisma } from "../src/lib/prisma";
+import { createAdmin, hasAnyAdmin } from "../src/lib/admin-store";
 
 async function main() {
   const username = process.env.SEED_ADMIN_USERNAME?.trim() || "admin";
@@ -22,26 +24,20 @@ async function main() {
     process.exit(1);
   }
 
-  const existing = await prisma.admin.findFirst();
-  if (existing) {
+  const alreadyExists = await hasAnyAdmin();
+  if (alreadyExists) {
     console.log(
-      `⚠️  Admin sudah ada (username: "${existing.username}"). Seeder dibatalkan.`,
+      `⚠️  Admin sudah ada di Google Sheets. Seeder dibatalkan.`,
     );
     return;
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const admin = await prisma.admin.create({
-    data: { username, passwordHash },
-  });
+  const admin = await createAdmin({ username, passwordHash });
   console.log(`✅ Admin berhasil dibuat: username="${admin.username}"`);
 }
 
-main()
-  .catch((err) => {
-    console.error("❌ Seeder gagal:", err);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((err) => {
+  console.error("❌ Seeder gagal:", err);
+  process.exit(1);
+});

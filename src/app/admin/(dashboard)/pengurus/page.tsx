@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Pencil } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import { listPengurus } from "@/lib/content-store";
 import { Button } from "@/components/ui/button";
 import DeleteButton from "@/components/admin/DeleteButton";
 
@@ -22,9 +22,7 @@ function initial(nama: string): string {
 }
 
 export default async function AdminPengurusPage() {
-  const pengurus = await prisma.pengurus.findMany({
-    orderBy: [{ urutan: "asc" }, { nama: "asc" }],
-  });
+  const pengurus = await listPengurus();
 
   return (
     <div className="space-y-6">

@@ -9,7 +9,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import {
+  listArtikel,
+  listKegiatan,
+  listPengurus,
+} from "@/lib/content-store";
 import { listPendaftaran } from "@/lib/pendaftaran-store";
 import { formatDate } from "@/lib/utils";
 
@@ -31,20 +35,26 @@ type Stat = {
 
 export default async function AdminDashboardPage() {
   const [
-    totalArtikel,
-    artikelPublished,
-    totalKegiatan,
-    kegiatanUpcoming,
-    totalPengurus,
+    artikelList,
+    kegiatanList,
+    pengurusList,
     pendaftaran,
   ] = await Promise.all([
-    prisma.artikel.count(),
-    prisma.artikel.count({ where: { status: "PUBLISHED" } }),
-    prisma.kegiatan.count(),
-    prisma.kegiatan.count({ where: { status: "AKAN_DATANG" } }),
-    prisma.pengurus.count(),
+    listArtikel(),
+    listKegiatan(),
+    listPengurus(),
     listPendaftaran(),
   ]);
+
+  const totalArtikel = artikelList.length;
+  const artikelPublished = artikelList.filter(
+    (a) => a.status === "PUBLISHED",
+  ).length;
+  const totalKegiatan = kegiatanList.length;
+  const kegiatanUpcoming = kegiatanList.filter(
+    (k) => k.status === "AKAN_DATANG",
+  ).length;
+  const totalPengurus = pengurusList.length;
   const pendaftaranPending = pendaftaran.filter(
     (p) => p.status === "PENDING",
   ).length;

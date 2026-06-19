@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
+import { getPengurus } from "@/lib/content-store";
 import FormPengurus from "@/components/admin/FormPengurus";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default async function AdminPengurusEditPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const pengurus = await prisma.pengurus.findUnique({ where: { id } });
+  const pengurus = await getPengurus(id);
   if (!pengurus) notFound();
 
   return (
@@ -33,7 +33,7 @@ export default async function AdminPengurusEditPage({
           Edit pengurus
         </h1>
         <p className="mt-1 text-sm text-pmr-dark/60">
-          Perubahan akan langsung tersimpan ke database.
+          Perubahan akan langsung tersimpan ke Google Sheets.
         </p>
       </header>
 

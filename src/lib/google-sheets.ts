@@ -1,5 +1,3 @@
-import "server-only";
-
 import { createSign } from "node:crypto";
 
 const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";

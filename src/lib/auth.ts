@@ -3,11 +3,11 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 
 import { authConfig } from "@/lib/auth.config";
-import { prisma } from "@/lib/prisma";
+import { getAdminByUsername } from "@/lib/admin-store";
 
 /**
- * Config Auth.js "full" — dengan Prisma lookup + bcrypt compare.
- * File ini bisa pakai module Node (Prisma, bcrypt) karena tidak dipakai di Edge.
+ * Config Auth.js "full" — dengan Google Sheets lookup + bcrypt compare.
+ * File ini bisa pakai module Node (bcrypt) karena tidak dipakai di Edge.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -29,7 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!username || !password) return null;
 
-        const admin = await prisma.admin.findUnique({ where: { username } });
+        const admin = await getAdminByUsername(username);
         if (!admin) return null;
 
         const ok = await bcrypt.compare(password, admin.passwordHash);

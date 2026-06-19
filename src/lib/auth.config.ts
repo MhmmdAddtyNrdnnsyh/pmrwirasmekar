@@ -2,7 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 
 /**
  * Config Auth.js yang aman dipakai di Edge Runtime (middleware / proxy).
- * TIDAK boleh import Prisma, bcrypt, atau module Node-only di sini.
+ * TIDAK boleh import bcrypt atau module Node-only di sini.
  */
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
