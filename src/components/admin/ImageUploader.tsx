@@ -16,6 +16,18 @@ type Props = {
 
 const ACCEPT = "image/jpeg,image/jpg,image/png,image/webp,image/avif,image/heic,image/heif";
 
+export const UPLOAD_TIMEOUT_MS = 60_000;
+
+export function getUploadErrorMessage(error: unknown): string {
+  if (error instanceof DOMException && error.name === "TimeoutError") {
+    return "Upload melewati batas waktu 60 detik. Silakan coba lagi.";
+  }
+
+  return error instanceof Error
+    ? error.message
+    : "Terjadi kesalahan saat upload.";
+}
+
 export default function ImageUploader({
   folder,
   value,
@@ -41,6 +53,7 @@ export default function ImageUploader({
       const res = await fetch("/api/upload", {
         method: "POST",
         body: form,
+        signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
       });
 
       const data: unknown = await res.json().catch(() => null);
@@ -83,9 +96,7 @@ export default function ImageUploader({
         throw new Error("Response upload tidak valid.");
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Terjadi kesalahan saat upload.",
-      );
+      setError(getUploadErrorMessage(err));
     } finally {
       setIsUploading(false);
       if (inputRef.current) inputRef.current.value = "";

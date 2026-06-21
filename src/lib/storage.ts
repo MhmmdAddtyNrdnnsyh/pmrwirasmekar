@@ -9,7 +9,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * Client ini dibangun dengan `SUPABASE_SERVICE_ROLE_KEY` — jangan pernah
  * meng-import module ini dari Client Component atau Edge Runtime.
  */
-export const BUCKET = "pmr_wira_smekar_storage" as const;
+export const BUCKET =
+  process.env.SUPABASE_STORAGE_BUCKET || "pmr_wira_smekar_storage";
 
 export type UploadFolder = "artikel" | "kegiatan" | "pengurus";
 
