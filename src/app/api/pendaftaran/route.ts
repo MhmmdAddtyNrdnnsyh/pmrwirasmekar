@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAdmin } from "@/lib/api-auth";
+import { isPendaftaranOpen } from "@/lib/pendaftaran-window";
 import { createPendaftaran, listPendaftaran } from "@/lib/pendaftaran-store";
 
 export const runtime = "nodejs";
@@ -26,6 +27,13 @@ export async function GET() {
 // Input validasi ketat karena bisa dipanggil siapa saja.
 export async function POST(request: Request) {
   try {
+    if (!isPendaftaranOpen()) {
+      return NextResponse.json(
+        { error: "Pendaftaran dibuka mulai 23 Juli 2026." },
+        { status: 403 },
+      );
+    }
+
     const body = (await request.json().catch(() => null)) as {
       nama?: unknown;
       nis?: unknown;

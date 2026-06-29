@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import {
   Mail,
   Phone,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 
 import FormPendaftaran from "@/components/public/FormPendaftaran";
+import { isPendaftaranOpen } from "@/lib/pendaftaran-window";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -67,7 +69,10 @@ const kontakItems: KontakItem[] = [
   },
 ];
 
-export default function DaftarPage() {
+export default async function DaftarPage() {
+  await connection();
+  const pendaftaranOpen = isPendaftaranOpen();
+
   return (
     <>
       <section className="bg-pmr-gray/40">
@@ -79,8 +84,9 @@ export default function DaftarPage() {
             Jadi relawan muda berikutnya di {site.nama}
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-pmr-dark/70">
-            Isi formulir di bawah untuk mendaftar. Ada pertanyaan? Hubungi kami
-            lewat kontak yang tertera.
+            {pendaftaranOpen
+              ? "Isi formulir di bawah untuk mendaftar. Ada pertanyaan? Hubungi kami lewat kontak yang tertera."
+              : "Pendaftaran anggota baru dibuka mulai 23 Juli 2026. Ada pertanyaan? Hubungi kami lewat kontak yang tertera."}
           </p>
         </div>
       </section>
@@ -161,12 +167,19 @@ export default function DaftarPage() {
               Isi data berikut dengan benar
             </p>
             <p className="mt-2 text-pmr-dark/70">
-              Semua kolom wajib diisi. Panitia akan menghubungi calon anggota
-              melalui nomor HP yang kamu cantumkan.
+              {pendaftaranOpen
+                ? "Semua kolom wajib diisi. Panitia akan menghubungi calon anggota melalui nomor HP yang kamu cantumkan."
+                : "Formulir akan tersedia saat pendaftaran dibuka."}
             </p>
 
             <div className="mt-6">
-              <FormPendaftaran />
+              {pendaftaranOpen ? (
+                <FormPendaftaran />
+              ) : (
+                <div className="rounded-2xl border border-pmr-gray bg-pmr-gray/40 p-6 text-pmr-dark/75 sm:p-8">
+                  Pendaftaran anggota baru belum dibuka. Nantikan pendaftarannya!
+                </div>
+              )}
             </div>
           </div>
         </div>
