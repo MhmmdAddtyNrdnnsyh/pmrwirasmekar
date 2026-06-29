@@ -18,7 +18,7 @@ export const site = {
     telepon: "0895-3791-77221",
     instagram: "pmrsmekar",
     hariLatihan: "Sabtu, 08.00 – 10.00 WIB",
-    pembina: "Ibu Siti.",
+    pembina: "Ibu Siti Khomisah S.Pd",
     // Koordinat markas untuk embed peta. Ganti nilai ini sesuai lokasi sebenarnya.
     peta: {
       lat: -6.2,

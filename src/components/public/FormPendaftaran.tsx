@@ -96,7 +96,7 @@ export default function FormPendaftaran() {
             type="text"
             required
             autoComplete="name"
-            placeholder="Budi Santoso"
+            placeholder="Dinda Putri Aulia"
             className={inputClass}
             disabled={isLoading}
           />
@@ -111,7 +111,7 @@ export default function FormPendaftaran() {
             type="text"
             inputMode="numeric"
             required
-            placeholder="1234567890"
+            placeholder="0011223344"
             className={inputClass}
             disabled={isLoading}
           />
@@ -125,7 +125,7 @@ export default function FormPendaftaran() {
             name="kelas"
             type="text"
             required
-            placeholder="X MIPA 2"
+            placeholder="XII AK 2"
             className={inputClass}
             disabled={isLoading}
           />
