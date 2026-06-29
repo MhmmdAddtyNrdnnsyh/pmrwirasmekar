@@ -86,7 +86,7 @@ export default async function DaftarPage() {
           <p className="mt-4 max-w-2xl text-lg text-pmr-dark/70">
             {pendaftaranOpen
               ? "Isi formulir di bawah untuk mendaftar. Ada pertanyaan? Hubungi kami lewat kontak yang tertera."
-              : "Pendaftaran anggota baru dibuka mulai 23 Juli 2026. Ada pertanyaan? Hubungi kami lewat kontak yang tertera."}
+              : "Nantikan pendaftaran PMR Wira SMK Negeri 01 Dukuhturi, Pantau informasinya!"}
           </p>
         </div>
       </section>
